@@ -1,0 +1,41 @@
+version: '3.7'
+services:
+  db:
+    image: postgres
+    restart: always
+    ports: 
+      - 5432:5432
+    environment:
+      POSTGRES_USER: csw
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: cswdb
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    container_name: "postgres"
+    networks: 
+      - carservicewale
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50M"
+        max-file: "5"
+
+  carservicewale:
+    build: .
+    init: true
+    restart: always
+    volumes:
+      - .:/opt/app/src
+    command: sh -c "python3 manage.py migrate && python3 manage.py add_super_user && python3 manage.py runserver 0.0.0.0:8000"
+    ports:
+      - 8000:8000
+    container_name: "carservicewale"
+    depends_on:
+      - db
+    networks:
+      - carservicewale
+
+networks:
+  carservicewale:
+    driver: "bridge"
+    name: "carservicewale"
